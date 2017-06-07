@@ -17,11 +17,9 @@
 #include "rbc.h"
 #include "trec.h"
 
-#define FLIMIT 32
 #define DEFAULT_DEPTH 1000
 #define RBC_RUNID "rbc-combine"
 
-static FILE *files[FLIMIT + 1] = {NULL};
 static double phi = 0.8;
 static size_t depth = DEFAULT_DEPTH;
 char *runid = NULL;
@@ -32,31 +30,20 @@ parse_opt(int argc, char **argv);
 static void
 usage(void);
 
-static void
-files_open(int argc, char **argv)
+static FILE *
+next_file(int argc, char **argv)
 {
-    if (argc > FLIMIT) {
-        err_exit("maximum input files is %d", FLIMIT);
-    }
-    for (int i = 0; i < FLIMIT && argc > 0; i++) {
-        FILE *fp;
-        if (!(fp = fopen(argv[optind++], "r"))) {
-            perror("fopen");
-            exit(EXIT_FAILURE);
-        }
-        files[i] = fp;
-        argc--;
-    }
-}
+    FILE *fp = NULL;
 
-static void
-files_close()
-{
-    FILE *fp;
-    int i = 0;
-    while ((fp = files[i++])) {
-        fclose(fp);
+    if (argc < 1) {
+        return fp;
     }
+    if (!(fp = fopen(argv[optind++], "r"))) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+
+    return fp;
 }
 
 int
@@ -67,9 +54,8 @@ main(int argc, char **argv)
     FILE *fp;
 
     left = parse_opt(argc, argv);
-    files_open(left, argv);
 
-    for (size_t i = 0; (fp = files[i]) != NULL; i++) {
+    for (size_t i = left; (fp = next_file(i, argv)) != NULL; i--) {
         struct trec_run *r = trec_create();
         trec_read(r, fp);
         if (first) {
@@ -79,12 +65,12 @@ main(int argc, char **argv)
 
         rbc_accumulate(r);
         trec_destroy(r);
+        fclose(fp);
     }
 
     rbc_present(stdout, runid);
     rbc_destory();
     free(runid);
-    files_close();
 
     return 0;
 }
