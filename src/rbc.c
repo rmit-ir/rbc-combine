@@ -96,13 +96,12 @@ rbc_present(FILE *stream, const char *id)
         while (sz < weight_sz && pq->size > 0) {
             rbc_pq_dequeue(pq, res + sz++);
         }
-        for (size_t j = weight_sz, k = 1; j > 0; j--, k++) {
+        for (size_t j = weight_sz, k = 1; j > 0; j--) {
             size_t idx = j - 1;
-            if (!res[idx].is_set) {
-                break;
+            if (res[idx].is_set) {
+                fprintf(stream, "%d Q0 %s %lu %.4f %s\n", qids.ary[i],
+                    res[idx].docno, k++, res[idx].val, id);
             }
-            fprintf(stream, "%d Q0 %s %lu %.4f %s\n", qids.ary[i],
-                res[idx].docno, k, res[idx].val, id);
         }
         free(res);
         rbc_pq_destroy(pq);
