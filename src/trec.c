@@ -75,6 +75,7 @@ trec_destroy(struct trec_run *run)
 static struct trec_entry
 parse_line(char *line, int *topic)
 {
+    static bool rank_zero = false;
     const char *delim = "\t ";
     const int num_sep = 5; // 6 columns
     struct trec_entry tentry;
@@ -104,6 +105,17 @@ parse_line(char *line, int *topic)
     tentry.score = strtod(tok, NULL);
     tok = strtok(NULL, delim);
     tentry.name = strndup(tok, strlen(tok));
+
+    // Handle run files the begin from rank 0
+    if (0 == tentry.rank) {
+        rank_zero = true;
+    } else if (1 == tentry.rank) {
+        rank_zero = false;
+    }
+
+    if (rank_zero) {
+        tentry.rank++;
+    }
 
     if (prev_top != tentry.qid) {
         prev_rank = INT_MIN;

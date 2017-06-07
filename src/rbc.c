@@ -58,13 +58,6 @@ rbc_accumulate(struct trec_run *r)
 {
     for (size_t i = 0; i < r->len; i++) {
         size_t rank = r->ary[i].rank - 1;
-        if (SIZE_MAX == rank) {
-            // Ignore the fact that some runs/systems start their rank numbers
-            // from 0.
-            //
-            // FIXME Move this to run file parsing.
-            err_exit("rank number starts from 0");
-        }
         if (rank < weight_sz) {
             double w = weights[rank];
             struct rbc_accum **curr;
