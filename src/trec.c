@@ -11,7 +11,6 @@
 
 #define INIT_SZ 16
 
-static int prev_rank = INT_MIN;
 static int prev_top = 0;
 
 /*
@@ -75,7 +74,7 @@ trec_destroy(struct trec_run *run)
 static struct trec_entry
 parse_line(char *line, int *topic)
 {
-    static bool rank_zero = false;
+    static int rank = 1;
     const char *delim = "\t ";
     const int num_sep = 5; // 6 columns
     struct trec_entry tentry;
@@ -96,37 +95,24 @@ parse_line(char *line, int *topic)
 
     tok = strtok(dup, delim);
     tentry.qid = strtol(tok, NULL, 10);
+
+    if (prev_top != tentry.qid) {
+        rank = 1;
+        prev_top = tentry.qid;
+        *topic = tentry.qid;
+    }
+
     tok = strtok(NULL, delim); // skip over column 2
     tok = strtok(NULL, delim);
     tentry.docno = strndup(tok, strlen(tok));
-    tok = strtok(NULL, delim);
-    tentry.rank = strtol(tok, NULL, 10);
+    tok = strtok(NULL, delim); // skip rank column
+    tentry.rank = rank++;
+    strtol(tok, NULL, 10);
     tok = strtok(NULL, delim);
     tentry.score = strtod(tok, NULL);
     tok = strtok(NULL, delim);
     tentry.name = strndup(tok, strlen(tok));
 
-    // Handle run files the begin from rank 0
-    if (0 == tentry.rank) {
-        rank_zero = true;
-    } else if (1 == tentry.rank) {
-        rank_zero = false;
-    }
-
-    if (rank_zero) {
-        tentry.rank++;
-    }
-
-    if (prev_top != tentry.qid) {
-        prev_rank = INT_MIN;
-        prev_top = tentry.qid;
-        *topic = tentry.qid;
-    }
-    if (prev_rank > tentry.rank) {
-        err_exit("rank column for topic %d is not monotonically increasing",
-            tentry.qid);
-    }
-    prev_rank = tentry.rank;
     free(dup);
 
     return tentry;
@@ -138,7 +124,6 @@ trec_read(struct trec_run *r, FILE *fp)
     char buf[BUFSIZ] = {0};
     int curr_topic;
 
-    prev_rank = INT_MIN;
     prev_top = 0;
 
     while (fgets(buf, BUFSIZ, fp)) {
