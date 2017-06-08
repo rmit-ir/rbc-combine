@@ -65,7 +65,7 @@ rbc_accum_create(size_t capacity)
 {
     struct rbc_accum *htable;
 
-    htable = malloc(sizeof(struct rbc_accum));
+    htable = bmalloc(sizeof(struct rbc_accum));
     htable->capacity = get_prime(capacity);
     htable->size = 0;
     htable->data = bmalloc(sizeof(struct accum_node) * htable->capacity);
