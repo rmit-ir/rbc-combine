@@ -93,7 +93,7 @@ rbc_present(FILE *stream, const char *id)
             size_t idx = j - 1;
             if (res[idx].is_set) {
                 fprintf(stream, "%d Q0 %s %lu %.4f %s\n", qids.ary[i],
-                    res[idx].docno, k++, res[idx].val, id);
+                    res[idx].docno, k++, idx + res[idx].val, id);
             }
         }
         free(res);
