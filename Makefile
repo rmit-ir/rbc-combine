@@ -12,7 +12,7 @@ TARGET = rbc-combine
 GIT = $(shell which git)
 GITDIR = $(shell stat .git > /dev/null; echo $$?)
 VERSION_NUM = 0.1.0
-VERSION_EXTRA = -beta
+VERSION_EXTRA =
 ifneq ($(GIT),)
 ifeq ($(GITDIR), 0)
 	VERSION_EXTRA += ($(shell $(GIT) rev-parse --short=8 HEAD))
