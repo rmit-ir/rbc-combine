@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "rbc_pq.h"
+#include "pq.h"
 #include "rbc_topic.h"
 #include "trec.h"
 

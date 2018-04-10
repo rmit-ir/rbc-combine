@@ -1,5 +1,5 @@
 /*
- * This file is a part of Polyfuse.
+ * This file is a part of RBC Combine.
  *
  * Copyright (c) 2018 Luke Gallagher <luke.gallagher@rmit.edu.au>
  *
@@ -7,7 +7,7 @@
  * that was distributed with this source code.
  */
 
-#include "pq.h"
+#include "rbc_pq.h"
 
 #define HEAP_ROOT 1
 

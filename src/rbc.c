@@ -104,19 +104,19 @@ rbc_present(FILE *stream, const char *id, size_t depth)
     for (size_t i = 0; i < qids.size; i++) {
         struct rbc_accum *curr;
         curr = *rbc_topic_lookup(topic_tab, qids.ary[i]);
-        struct rbc_pq *pq = rbc_pq_create(weight_sz);
+        struct pq *pq = pq_create(weight_sz);
         // this is why we use linear probing
         for (size_t j = 0; j < curr->capacity; j++) {
             if (!curr->data[j].is_set) {
                 continue;
             }
-            rbc_pq_enqueue(pq, curr->data[j].docno, curr->data[j].val);
+            pq_insert(pq, curr->data[j].docno, curr->data[j].val);
         }
         struct accum_node *res =
             bmalloc(sizeof(struct accum_node) * weight_sz);
         size_t sz = 0;
         while (sz < weight_sz && pq->size > 0) {
-            rbc_pq_dequeue(pq, res + sz++);
+            pq_remove(pq, res + sz++);
         }
         for (size_t j = weight_sz, k = 1; j > 0; j--) {
             size_t idx = j - 1;
@@ -126,6 +126,6 @@ rbc_present(FILE *stream, const char *id, size_t depth)
             }
         }
         free(res);
-        rbc_pq_destroy(pq);
+        pq_destroy(pq);
     }
 }
