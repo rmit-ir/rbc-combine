@@ -59,16 +59,17 @@ main(int argc, char **argv)
         struct trec_run *r = trec_create();
         trec_read(r, fp);
         if (first) {
-            rbc_init(&r->topics, phi, depth);
+            rbc_init(&r->topics);
             first = false;
         }
 
+        rbc_weight_alloc(phi, r->len);
         rbc_accumulate(r);
         trec_destroy(r);
         fclose(fp);
     }
 
-    rbc_present(stdout, runid);
+    rbc_present(stdout, runid, depth);
     rbc_destory();
     free(runid);
 
@@ -131,7 +132,7 @@ usage(void)
     fprintf(stderr, "Usage: rbc-combine [option] run1 run2 [run3 ...]\n");
     fprintf(stderr, "\nOptions:\n"
                     "  -p num       User persistence in the range [0.0,1.0]\n"
-                    "  -d depth     Rank depth to calculate\n"
+                    "  -d depth     Rank depth of output\n"
                     "  -r runid     Set run identifier\n"
                     "  -h           Display this message\n"
                     "  -v           Display version and exit\n\n");
