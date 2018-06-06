@@ -12,6 +12,7 @@
 #define INIT_SZ 16
 
 static int prev_top = 0;
+static int max_rank = 1;
 
 /*
  * Allocate more memory if required.
@@ -49,6 +50,7 @@ trec_create()
     run->ary = bmalloc(sizeof(struct trec_entry) * INIT_SZ);
     run->len = 0;
     run->alloc = INIT_SZ;
+    run->max_rank = 0;
 
     run->topics.ary = bmalloc(sizeof(int) * INIT_SZ);
     run->topics.len = 0;
@@ -97,6 +99,9 @@ parse_line(char *line, int *topic)
     tentry.qid = strtol(tok, NULL, 10);
 
     if (prev_top != tentry.qid) {
+        if (rank > max_rank) {
+            max_rank = rank;
+        }
         rank = 1;
         prev_top = tentry.qid;
         *topic = tentry.qid;
@@ -141,4 +146,6 @@ trec_read(struct trec_run *r, FILE *fp)
             r->topics.ary[r->topics.len++] = curr_topic;
         }
     }
+
+    r->max_rank = max_rank;
 }

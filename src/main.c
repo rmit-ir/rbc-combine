@@ -63,7 +63,7 @@ main(int argc, char **argv)
             first = false;
         }
 
-        rbc_weight_alloc(phi, r->len);
+        rbc_weight_alloc(phi, r->max_rank);
         rbc_accumulate(r);
         trec_destroy(r);
         fclose(fp);

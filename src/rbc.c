@@ -21,7 +21,7 @@ static struct rbc_topic *topic_tab = NULL;
 static struct topic_list qids = {NULL, 0};
 
 /*
- * Allocate RBC weight to the longest seen run file.
+ * Allocate RBC weight to the deepest topic seen in all run files.
  */
 void
 rbc_weight_alloc(const double phi, const size_t len)
@@ -31,7 +31,6 @@ rbc_weight_alloc(const double phi, const size_t len)
     static double _phi;
     size_t prev = weight_sz;
 
-    // alocate weights for the longest run file
     if (len <= weight_sz) {
         return;
     }
