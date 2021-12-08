@@ -90,20 +90,17 @@ rbc_accumulate(struct trec_run *r)
 }
 
 void
-rbc_present(FILE *stream, const char *id, size_t depth)
+rbc_present(FILE *stream, const char *id, const size_t depth)
 {
     if (depth < 1) {
         err_exit("`depth` is 0");
     }
 
-    if (depth > weight_sz) {
-        depth = weight_sz;
-    }
-
     for (size_t i = 0; i < qids.size; i++) {
         struct rbc_accum *curr;
         curr = *rbc_topic_lookup(topic_tab, qids.ary[i]);
-        struct pq *pq = pq_create(weight_sz);
+        assert(curr && curr->size);
+        struct pq *pq = pq_create(curr->size);
         // this is why we use linear probing
         for (size_t j = 0; j < curr->capacity; j++) {
             if (!curr->data[j].is_set) {
@@ -111,18 +108,21 @@ rbc_present(FILE *stream, const char *id, size_t depth)
             }
             pq_insert(pq, curr->data[j].docno, curr->data[j].val);
         }
+        // `pq->size` holds the depth of the current topic, `weight_sz` is the
+        // deepest topic seen across all queries and run files.
+        // `pq->size` will change as items are removed, make a local copy in `len`
+        size_t len = pq->size;
         struct accum_node *res =
-            bmalloc(sizeof(struct accum_node) * weight_sz);
-        size_t sz = 0;
-        while (sz < weight_sz && pq->size > 0) {
-            pq_remove(pq, res + sz++);
+            bmalloc(sizeof(struct accum_node) * len);
+        for (size_t j = 0; j < len; j++) {
+            pq_remove(pq, res + j);
         }
         long long c = depth;
-        for (size_t j = sz, k = 1; c >= 0; j--, c--) {
-            if (res[j].is_set) {
-                fprintf(stream, "%d Q0 %s %lu %.4f %s\n", qids.ary[i],
+        // when `c` reaches 0, the evaluation depth is reached.
+        // when `j` reaches 0, the array is exhausted.
+        for (size_t j = len - 1, k = 1; c > 0; j--, c--) {
+            fprintf(stream, "%d Q0 %s %lu %.4f %s\n", qids.ary[i],
                     res[j].docno, k++, j + res[j].val, id);
-            }
             if (0 == j) {
                 break;
             }
