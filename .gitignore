@@ -1,3 +1,4 @@
 *.o
 *.d
 rbc-combine
+test/fixture/v556702-segfault/*.run

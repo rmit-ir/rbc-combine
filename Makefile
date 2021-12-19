@@ -54,3 +54,14 @@ clean:
 	$(RM) $(TARGET) $(OBJ) $(DEP)
 
 -include $(DEP)
+
+.PHONY: test
+test:
+	@echo "running integration tests..."
+	./test/integration.sh
+
+.PHONY: clean-test
+clean-test:
+	$(RM) \
+		"test/fixture/v556702-segfault/minilm.run" \
+		"test/fixture/v556702-segfault/bm25.run"
