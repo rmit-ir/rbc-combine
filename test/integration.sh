@@ -20,4 +20,10 @@ if [ ! -f "test/fixture/v556702-segfault/minilm.run" ]; then
 fi
 ./rbc-combine test/fixture/v556702-segfault/*.run > /dev/null
 
+echo "test: no lazy-topic"
+RESULT=$(./rbc-combine test/fixture/lazy-topic/{a,a}.run | wc -l)
+test $RESULT = "50"
+echo "test: warn when lazy-topic"
+./rbc-combine test/fixture/lazy-topic/{a,b}.run 2>&1 > /dev/null | grep -q ^warn
+
 echo "test: passed"

@@ -12,13 +12,24 @@
 struct topic_list {
     int *ary;
     size_t size;
+    size_t cap;
 };
 
+/**
+ * List of topics that are being processed.
+ */
+static struct topic_list qids = {NULL, 0, 0};
+
+/**
+ * Accumulator for each topic.
+ */
+static struct rbc_topic *topic_tab = NULL;
+
+/**
+ * RBC weight array.
+ */
 static double *weights = NULL;
 static size_t weight_sz = 0;
-
-static struct rbc_topic *topic_tab = NULL;
-static struct topic_list qids = {NULL, 0};
 
 /*
  * Allocate RBC weight to the deepest topic seen in all run files.
@@ -51,10 +62,39 @@ rbc_weight_alloc(const double phi, const size_t len)
     }
 }
 
+/**
+ * Set the topics given from a `struct trec_topic` array (an input TREC run
+ * file).
+ */
 void
-rbc_init(const struct trec_topic *topics)
+rbc_set_topics(const struct trec_topic *topics)
 {
-    qids.ary = bmalloc(sizeof(int) * topics->len);
+    // realloc and check if there are new topics.
+    if (qids.ary) {
+        struct rbc_accum **accum;
+        for (size_t i = 0; i < topics->len; i++) {
+            accum = rbc_topic_lookup(topic_tab, topics->ary[i]);
+            if (*accum) {
+                // topic already exists
+                continue;
+            }
+            fprintf(stderr, "warning: lazy add topic %d\n", topics->ary[i]);
+            // `qids` realloc needed?
+            if (qids.cap == qids.size) {
+                qids.cap *= 2;
+                qids.ary = brealloc(qids.ary, sizeof(int) * qids.cap);
+            }
+            // `qids` append
+            qids.ary[qids.size++] = topics->ary[i];
+            // `topic_tab` create accumulator for the new topic
+            rbc_topic_insert(&topic_tab, topics->ary[i]);
+        }
+        return;
+    }
+
+    // initialize and insert topics
+    qids.cap = topics->len * 2;
+    qids.ary = bmalloc(sizeof(int) * qids.cap);
     qids.size = topics->len;
     memcpy(qids.ary, topics->ary, sizeof(int) * topics->len);
 
@@ -76,14 +116,28 @@ rbc_destory()
 void
 rbc_accumulate(struct trec_run *r)
 {
+    struct rbc_accum **curr;
+
     for (size_t i = 0; i < r->len; i++) {
         size_t rank = r->ary[i].rank - 1;
         if (rank < weight_sz) {
             double w = weights[rank];
-            struct rbc_accum **curr;
+
+            // TODO: call `rbc_topic_lookup` once per topic instead of once per
+            // line.
+            //
+            // yes, we're calling this for potentially every line in the run
+            // file. it only needs to be called once for each topic.
+            // fixing this could be a small optimization improvement.
             curr = rbc_topic_lookup(topic_tab, r->ary[i].qid);
+
+            // add RBC weight to current document entry
             if (*curr) {
                 rbc_accum_update(curr, r->ary[i].docno, w);
+            } else {
+                // should not get here. `main` calls `rbc_set_topics` for each
+                // run file before `rbc_accumulate`.
+                err_exit("topic %d accumulator could not be processed\n", r->ary[i].qid);
             }
         }
     }

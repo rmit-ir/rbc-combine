@@ -23,7 +23,7 @@ void
 rbc_weight_alloc(const double phi, const size_t len);
 
 void
-rbc_init(const struct trec_topic *topics);
+rbc_set_topics(const struct trec_topic *topics);
 
 void
 rbc_destory();

@@ -50,7 +50,6 @@ int
 main(int argc, char **argv)
 {
     int left;
-    bool first = true;
     FILE *fp;
 
     left = parse_opt(argc, argv);
@@ -58,11 +57,7 @@ main(int argc, char **argv)
     for (size_t i = left; (fp = next_file(i, argv)) != NULL; i--) {
         struct trec_run *r = trec_create();
         trec_read(r, fp);
-        if (first) {
-            rbc_init(&r->topics);
-            first = false;
-        }
-
+        rbc_set_topics(&r->topics);
         rbc_weight_alloc(phi, r->max_rank);
         rbc_accumulate(r);
         trec_destroy(r);
