@@ -11,7 +11,7 @@ TARGET = rbc-combine
 
 GIT = $(shell which git)
 GITDIR = $(shell stat .git > /dev/null; echo $$?)
-VERSION_NUM = 0.2.0
+VERSION_NUM = 0.3.0
 VERSION_EXTRA =
 ifneq ($(GIT),)
 ifeq ($(GITDIR), 0)
